@@ -1,0 +1,62 @@
+[
+  {"model": "transit.route", "pk": 1, "fields": {"number": "111", "destination": "Rongai", "fare_estimate": "Ksh 50 - 100"}},
+  {"model": "transit.route", "pk": 2, "fields": {"number": "46", "destination": "Kayole", "fare_estimate": "Ksh 30 - 50"}},
+  {"model": "transit.route", "pk": 3, "fields": {"number": "34", "destination": "Kangemi", "fare_estimate": "Ksh 30 - 50"}},
+  {"model": "transit.route", "pk": 4, "fields": {"number": "23", "destination": "Ngong", "fare_estimate": "Ksh 80 - 150"}},
+  {"model": "transit.route", "pk": 5, "fields": {"number": "58", "destination": "Githurai 45", "fare_estimate": "Ksh 50 - 80"}},
+  {"model": "transit.route", "pk": 6, "fields": {"number": "9", "destination": "Eastleigh", "fare_estimate": "Ksh 30 - 50"}},
+  {"model": "transit.route", "pk": 7, "fields": {"number": "33", "destination": "Kikuyu", "fare_estimate": "Ksh 60 - 100"}},
+  {"model": "transit.route", "pk": 8, "fields": {"number": "44", "destination": "Umoja", "fare_estimate": "Ksh 30 - 50"}},
+  {"model": "transit.route", "pk": 9, "fields": {"number": "102", "destination": "Kitengela", "fare_estimate": "Ksh 100 - 150"}},
+  {"model": "transit.route", "pk": 10, "fields": {"number": "45", "destination": "Dandora", "fare_estimate": "Ksh 30 - 50"}},
+
+  {"model": "transit.stage", "pk": 1,  "fields": {"name": "Railways Bus Station", "latitude": -1.2921, "longitude": 36.8219, "is_major_hub": true,  "route": 1, "order": 1}},
+  {"model": "transit.stage", "pk": 2,  "fields": {"name": "Kencom",               "latitude": -1.2864, "longitude": 36.8227, "is_major_hub": true,  "route": 1, "order": 2}},
+  {"model": "transit.stage", "pk": 3,  "fields": {"name": "Bomas of Kenya",        "latitude": -1.3333, "longitude": 36.7500, "is_major_hub": false, "route": 1, "order": 3}},
+  {"model": "transit.stage", "pk": 4,  "fields": {"name": "Galleria Mall",         "latitude": -1.3667, "longitude": 36.7333, "is_major_hub": false, "route": 1, "order": 4}},
+  {"model": "transit.stage", "pk": 5,  "fields": {"name": "Rongai Stage",          "latitude": -1.3939, "longitude": 36.7458, "is_major_hub": true,  "route": 1, "order": 5}},
+
+  {"model": "transit.stage", "pk": 6,  "fields": {"name": "Ambassador Hotel",      "latitude": -1.2833, "longitude": 36.8167, "is_major_hub": true,  "route": 2, "order": 1}},
+  {"model": "transit.stage", "pk": 7,  "fields": {"name": "Afya Centre",           "latitude": -1.2839, "longitude": 36.8244, "is_major_hub": false, "route": 2, "order": 2}},
+  {"model": "transit.stage", "pk": 8,  "fields": {"name": "Jogoo Road",            "latitude": -1.2900, "longitude": 36.8500, "is_major_hub": false, "route": 2, "order": 3}},
+  {"model": "transit.stage", "pk": 9,  "fields": {"name": "Komarock",              "latitude": -1.2667, "longitude": 36.9000, "is_major_hub": false, "route": 2, "order": 4}},
+  {"model": "transit.stage", "pk": 10, "fields": {"name": "Kayole Stage",          "latitude": -1.2600, "longitude": 36.9167, "is_major_hub": true,  "route": 2, "order": 5}},
+
+  {"model": "transit.stage", "pk": 11, "fields": {"name": "Kencom",               "latitude": -1.2864, "longitude": 36.8227, "is_major_hub": true,  "route": 3, "order": 1}},
+  {"model": "transit.stage", "pk": 12, "fields": {"name": "University Way",        "latitude": -1.2800, "longitude": 36.8167, "is_major_hub": false, "route": 3, "order": 2}},
+  {"model": "transit.stage", "pk": 13, "fields": {"name": "Westlands",             "latitude": -1.2667, "longitude": 36.8000, "is_major_hub": false, "route": 3, "order": 3}},
+  {"model": "transit.stage", "pk": 14, "fields": {"name": "Mountain View",         "latitude": -1.2667, "longitude": 36.7667, "is_major_hub": false, "route": 3, "order": 4}},
+  {"model": "transit.stage", "pk": 15, "fields": {"name": "Kangemi Stage",         "latitude": -1.2667, "longitude": 36.7333, "is_major_hub": true,  "route": 3, "order": 5}},
+
+  {"model": "transit.stage", "pk": 16, "fields": {"name": "Railways Bus Station", "latitude": -1.2921, "longitude": 36.8219, "is_major_hub": true,  "route": 4, "order": 1}},
+  {"model": "transit.stage", "pk": 17, "fields": {"name": "Dagoretti Corner",      "latitude": -1.3000, "longitude": 36.7500, "is_major_hub": false, "route": 4, "order": 2}},
+  {"model": "transit.stage", "pk": 18, "fields": {"name": "Ngong Town",            "latitude": -1.3583, "longitude": 36.6583, "is_major_hub": true,  "route": 4, "order": 3}},
+
+  {"model": "transit.stage", "pk": 19, "fields": {"name": "Koja Stage",            "latitude": -1.2833, "longitude": 36.8333, "is_major_hub": true,  "route": 5, "order": 1}},
+  {"model": "transit.stage", "pk": 20, "fields": {"name": "Pangani",               "latitude": -1.2667, "longitude": 36.8333, "is_major_hub": false, "route": 5, "order": 2}},
+  {"model": "transit.stage", "pk": 21, "fields": {"name": "Thika Road Mall",       "latitude": -1.2167, "longitude": 36.8833, "is_major_hub": false, "route": 5, "order": 3}},
+  {"model": "transit.stage", "pk": 22, "fields": {"name": "Githurai 45 Stage",     "latitude": -1.1667, "longitude": 36.9167, "is_major_hub": true,  "route": 5, "order": 4}},
+
+  {"model": "transit.stage", "pk": 23, "fields": {"name": "Kencom",               "latitude": -1.2864, "longitude": 36.8227, "is_major_hub": true,  "route": 6, "order": 1}},
+  {"model": "transit.stage", "pk": 24, "fields": {"name": "Airbase",              "latitude": -1.2833, "longitude": 36.8333, "is_major_hub": false, "route": 6, "order": 2}},
+  {"model": "transit.stage", "pk": 25, "fields": {"name": "Eastleigh 1st Avenue",  "latitude": -1.2750, "longitude": 36.8500, "is_major_hub": true,  "route": 6, "order": 3}},
+
+  {"model": "transit.stage", "pk": 26, "fields": {"name": "Railways Bus Station", "latitude": -1.2921, "longitude": 36.8219, "is_major_hub": true,  "route": 7, "order": 1}},
+  {"model": "transit.stage", "pk": 27, "fields": {"name": "Westlands",             "latitude": -1.2667, "longitude": 36.8000, "is_major_hub": false, "route": 7, "order": 2}},
+  {"model": "transit.stage", "pk": 28, "fields": {"name": "Kabete",                "latitude": -1.2500, "longitude": 36.7333, "is_major_hub": false, "route": 7, "order": 3}},
+  {"model": "transit.stage", "pk": 29, "fields": {"name": "Kikuyu Stage",          "latitude": -1.2500, "longitude": 36.6667, "is_major_hub": true,  "route": 7, "order": 4}},
+
+  {"model": "transit.stage", "pk": 30, "fields": {"name": "Koja Stage",            "latitude": -1.2833, "longitude": 36.8333, "is_major_hub": true,  "route": 8, "order": 1}},
+  {"model": "transit.stage", "pk": 31, "fields": {"name": "Jogoo Road",            "latitude": -1.2900, "longitude": 36.8500, "is_major_hub": false, "route": 8, "order": 2}},
+  {"model": "transit.stage", "pk": 32, "fields": {"name": "Umoja 1",               "latitude": -1.2833, "longitude": 36.8833, "is_major_hub": false, "route": 8, "order": 3}},
+  {"model": "transit.stage", "pk": 33, "fields": {"name": "Umoja 2 Stage",         "latitude": -1.2833, "longitude": 36.9000, "is_major_hub": true,  "route": 8, "order": 4}},
+
+  {"model": "transit.stage", "pk": 34, "fields": {"name": "Railways Bus Station", "latitude": -1.2921, "longitude": 36.8219, "is_major_hub": true,  "route": 9, "order": 1}},
+  {"model": "transit.stage", "pk": 35, "fields": {"name": "Mlolongo",              "latitude": -1.3500, "longitude": 36.9167, "is_major_hub": false, "route": 9, "order": 2}},
+  {"model": "transit.stage", "pk": 36, "fields": {"name": "Kitengela Stage",       "latitude": -1.4750, "longitude": 36.9667, "is_major_hub": true,  "route": 9, "order": 3}},
+
+  {"model": "transit.stage", "pk": 37, "fields": {"name": "Koja Stage",            "latitude": -1.2833, "longitude": 36.8333, "is_major_hub": true,  "route": 10, "order": 1}},
+  {"model": "transit.stage", "pk": 38, "fields": {"name": "Mutindwa",              "latitude": -1.2667, "longitude": 36.8833, "is_major_hub": false, "route": 10, "order": 2}},
+  {"model": "transit.stage", "pk": 39, "fields": {"name": "Dandora Phase 1",       "latitude": -1.2500, "longitude": 36.9000, "is_major_hub": false, "route": 10, "order": 3}},
+  {"model": "transit.stage", "pk": 40, "fields": {"name": "Dandora Stage",         "latitude": -1.2333, "longitude": 36.9167, "is_major_hub": true,  "route": 10, "order": 4}}
+]

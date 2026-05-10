@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Route {{ route.number }} to {{ route.destination }} — NairobiRide{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    /* Route header banner */
+    .route-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+        padding: 36px 0;
+        color: #fff;
+    }
+    .route-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 70px;
+        background: #ffc107;
+        color: #1a1a2e;
+        font-weight: 900;
+        font-size: 1.5rem;
+        border-radius: 16px;
+        flex-shrink: 0;
+    }
+    .route-header h1 { font-size: 1.8rem; font-weight: 800; margin: 0; }
+    .route-header .sub { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px; }
+    .fare-pill {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 30px;
+        padding: 6px 18px;
+        font-size: 0.9rem;
+        color: #ffc107;
+        font-weight: 600;
+    }
+    .back-link {
+        color: rgba(255,255,255,0.6);
+        text-decoration: none;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 20px;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: #ffc107; }
+
+    /* Map */
+    #map {
+        height: 480px;
+        width: 100%;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+
+    /* Timeline stages */
+    .stages-panel {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    .stages-header {
+        background: #ffc107;
+        padding: 14px 20px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #1a1a2e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .timeline { padding: 8px 0; }
+    .timeline-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 12px 20px;
+        position: relative;
+        transition: background 0.15s;
+    }
+    .timeline-item:hover { background: #fafafa; }
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 32px;
+        top: 42px;
+        bottom: -12px;
+        width: 2px;
+        background: #e5e7eb;
+    }
+    .timeline-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-top: 2px;
+        z-index: 1;
+    }
+    .dot-hub { background: #ffc107; color: #1a1a2e; }
+    .dot-normal { background: #e5e7eb; color: #666; }
+    .timeline-name { font-weight: 600; font-size: 0.92rem; color: #1a1a2e; }
+    .hub-label {
+        display: inline-block;
+        background: #fff3cd;
+        color: #856404;
+        border-radius: 10px;
+        padding: 1px 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-top: 3px;
+    }
+
+    /* Info cards */
+    .info-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .info-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .info-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-value { font-size: 1rem; font-weight: 700; color: #1a1a2e; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Route Header -->
+<div class="route-header">
+    <div class="container">
+        <a href="/" class="back-link"><i class="fa fa-arrow-left"></i> Back to Search</a>
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+            <div class="route-badge">{{ route.number }}</div>
+            <div>
+                <div class="sub">Matatu Route</div>
+                <h1>To {{ route.destination }}</h1>
+                <div class="mt-2">
+                    <span class="fare-pill"><i class="fa fa-money-bill-wave me-1"></i>{{ route.fare_estimate }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Body -->
+<div class="container mt-4 mb-5">
+
+    <!-- Info cards row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="info-card">
+                <div class="info-icon" style="background:#fff8e1;color:#f59e0b;"><i class="fa fa-map-pin"></i></div>
+                <div>
+                    <div class="info-label">Stages</div>
+                    <div class="info-value">{{ stages.count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="info-card">
+                <div class="info-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fa fa-money-bill-wave"></i></div>
+                <div>
+                    <div class="info-label">Fare</div>
+                    <div class="info-value" style="font-size:0.85rem;">{{ route.fare_estimate }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="info-card">
+                <div class="info-icon" style="background:#eff6ff;color:#3b82f6;"><i class="fa fa-bus"></i></div>
+                <div>
+                    <div class="info-label">Route No.</div>
+                    <div class="info-value">{{ route.number }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="info-card">
+                <div class="info-icon" style="background:#fdf4ff;color:#a855f7;"><i class="fa fa-location-dot"></i></div>
+                <div>
+                    <div class="info-label">Destination</div>
+                    <div class="info-value" style="font-size:0.85rem;">{{ route.destination }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map + Stages -->
+    <div class="row g-4">
+        <!-- Stages timeline -->
+        <div class="col-md-4">
+            <div class="stages-panel">
+                <div class="stages-header">
+                    <i class="fa fa-route"></i> Stages & Stops
+                </div>
+                <div class="timeline">
+                    {% for stage in stages %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot {% if stage.is_major_hub %}dot-hub{% else %}dot-normal{% endif %}">
+                            {{ forloop.counter }}
+                        </div>
+                        <div>
+                            <div class="timeline-name">{{ stage.name }}</div>
+                            {% if stage.is_major_hub %}
+                            <div class="hub-label"><i class="fa fa-star me-1"></i>Major Boarding Point</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fa fa-map-pin mb-2 d-block" style="font-size:1.5rem;color:#ddd;"></i>
+                        No stages added yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div class="col-md-8">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN2GqaE=" crossorigin=""></script>
+<script>
+    var map = L.map('map').setView([-1.286389, 36.817223], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    var hubIcon = L.divIcon({
+        html: '<div style="background:#ffc107;width:16px;height:16px;border-radius:50%;border:3px solid #1a1a2e;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+        className: '', iconAnchor: [8, 8]
+    });
+    var stopIcon = L.divIcon({
+        html: '<div style="background:#0f3460;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>',
+        className: '', iconAnchor: [6, 6]
+    });
+
+    var coords = [];
+    {% for stage in stages %}
+    L.marker([{{ stage.latitude }}, {{ stage.longitude }}],
+        {icon: {% if stage.is_major_hub %}hubIcon{% else %}stopIcon{% endif %}}
+    ).addTo(map).bindPopup(
+        '<b>{{ stage.name }}</b><br>Stop #{{ forloop.counter }}'
+        {% if stage.is_major_hub %} + '<br><span style="color:#f59e0b;font-size:0.8rem;">⭐ Major Boarding Point</span>'{% endif %}
+    );
+    coords.push([{{ stage.latitude }}, {{ stage.longitude }}]);
+    {% endfor %}
+
+    if (coords.length > 1) {
+        var line = L.polyline(coords, {color: '#ffc107', weight: 4, opacity: 0.8, dashArray: '8,4'}).addTo(map);
+        map.fitBounds(line.getBounds(), {padding: [30, 30]});
+    } else if (coords.length === 1) {
+        map.setView(coords[0], 14);
+    }
+</script>
+{% endblock %}
