@@ -1,4 +1,3 @@
-Here is a professional, structured README.md file for your project. You can copy this directly into a file named README.md in your project's root directory.
 
 🚌 NairobiRide — Navigate Nairobi Like a Local
 NairobiRide is a web-based transit navigation platform designed to bridge the information gap for commuters in Nairobi. Whether you are a newcomer from upcountry, a tourist, or a local exploring a new neighborhood, NairobiRide helps you find matatu route numbers, boarding stages, and estimated fares with ease.
