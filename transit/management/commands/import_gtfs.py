@@ -3,10 +3,26 @@ import os
 from django.core.management.base import BaseCommand
 from transit.models import Route, Stage
 
-
 GTFS_DIR = os.path.join(
     os.path.dirname(__file__), '..', '..', '..', 'ASSETS', 'GTFS_FEED_2019'
 )
+
+# Official GTFS name → street nickname translation table
+NICKNAME_MAP = {
+    'haile selassie ave':           'Railways',
+    'racecourse road':              'Muthurwa',
+    'ronald ngala st':              'Posta',
+    'ronald ngala st / fire stn':   'Koja',
+    'tom mboya st / fire stn':      'Koja',
+    'latema road':                  'Odeon',
+    'latema rd':                    'Odeon',
+    'ngara road':                   'Fig Tree',
+    'park road':                    'Equity Ngara',
+    'temple road':                  '28',
+    'university way':               '28',
+    'kenyatta avenue / kencom':     'Kencom',
+    'moi avenue hilton':            'Kencom',
+}
 
 
 class Command(BaseCommand):
@@ -68,10 +84,15 @@ class Command(BaseCommand):
                     lon = float(row['stop_lon'])
                 except (ValueError, KeyError):
                     continue
+                name = row['stop_name'].strip()
+                # location_type 'U' = undesignated informal stop
+                is_undesignated = row.get('location_type', '').strip().upper() == 'U'
                 stop_map[stop_id] = {
-                    'name': row['stop_name'].strip(),
-                    'lat':  lat,
-                    'lon':  lon,
+                    'name':           name,
+                    'nickname':       NICKNAME_MAP.get(name.lower(), ''),
+                    'lat':            lat,
+                    'lon':            lon,
+                    'undesignated':   is_undesignated,
                 }
 
         self.stdout.write(f'Stops loaded: {len(stop_map)}')
@@ -133,10 +154,12 @@ class Command(BaseCommand):
                     route=route,
                     name=stop['name'],
                     defaults={
-                        'latitude':     stop['lat'],
-                        'longitude':    stop['lon'],
-                        'order':        order,
-                        'is_major_hub': False,
+                        'nickname':        stop['nickname'],
+                        'latitude':        stop['lat'],
+                        'longitude':       stop['lon'],
+                        'order':           order,
+                        'is_major_hub':    bool(stop['nickname']),
+                        'is_undesignated': stop['undesignated'],
                     }
                 )
                 if created:

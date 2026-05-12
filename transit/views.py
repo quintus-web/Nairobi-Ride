@@ -5,9 +5,21 @@ from .models import Route, Stage, Contribution
 
 # Smart location aliases — maps user-friendly terms to actual stage name fragments
 LOCATION_ALIASES = {
-    'cbd': ['kencom', 'ambassador', 'railways', 'koja', 'odeon', 'muthurwa', 'bus station', 'tusker'],
-    'town': ['kencom', 'ambassador', 'railways', 'koja', 'odeon', 'muthurwa', 'bus station'],
+    'cbd':         ['kencom', 'ambassador', 'railways', 'koja', 'odeon', 'muthurwa', 'bus station', 'tusker'],
+    'town':        ['kencom', 'ambassador', 'railways', 'koja', 'odeon', 'muthurwa', 'bus station'],
     'city centre': ['kencom', 'ambassador', 'railways', 'koja', 'odeon', 'muthurwa'],
+    # Slang / street nicknames
+    'mchwak':      ['mwiki'],
+    'kanairo':     ['nairobi'],
+    '28':          ['temple road', 'university way'],
+    'fig tree':    ['ngara'],
+    'posta':       ['ronald ngala', 'posta'],
+    'equity ngara':['park road', 'ngara'],
+    'kencom':      ['kencom', 'haile selassie', 'kenyatta avenue'],
+    'railways':    ['railways', 'haile selassie'],
+    'muthurwa':    ['muthurwa', 'racecourse'],
+    'koja':        ['koja', 'khoja', 'tom mboya', 'fire stn'],
+    'odeon':       ['odeon', 'latema', 'tusker'],
 }
 
 CBD_HUBS = [
@@ -31,9 +43,11 @@ def _routes_for_term(term):
     q = db_models.Q()
     for frag in fragments:
         q |= db_models.Q(stages__name__icontains=frag)
+        q |= db_models.Q(stages__nickname__icontains=frag)
         q |= db_models.Q(search_tags__icontains=frag)
     q |= db_models.Q(number__icontains=term)
     q |= db_models.Q(destination__icontains=term)
+    q |= db_models.Q(sacco__icontains=term)
     return Route.objects.filter(q).distinct()
 
 
