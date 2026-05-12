@@ -5,6 +5,7 @@ class Route(models.Model):
     number = models.CharField(max_length=10, help_text="e.g. 111, 46, 102")
     destination = models.CharField(max_length=100)
     fare_estimate = models.CharField(max_length=50, help_text="e.g. 50 - 100 KES")
+    search_tags = models.TextField(blank=True, default='', help_text="Auto-populated: all stage names for fast searching")
 
     def __str__(self):
         return f"{self.number} to {self.destination}"
