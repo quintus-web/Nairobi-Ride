@@ -40,6 +40,10 @@ class Command(BaseCommand):
             Route.objects.all().delete()
             self.stdout.write('Cleared existing routes and stages.')
 
+        # Skip if data already loaded (unless --clear was passed)
+        if not options['clear'] and Route.objects.exists():
+            self.stdout.write('Data already imported. Use --clear to re-import.')
+            return
         routes_file   = os.path.join(GTFS_DIR, 'routes.txt')
         stops_file    = os.path.join(GTFS_DIR, 'stops.txt')
         trips_file    = os.path.join(GTFS_DIR, 'trips.txt')
