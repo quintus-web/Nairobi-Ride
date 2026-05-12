@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Contribute — NairobiRide{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+        padding: 36px 0;
+        color: #fff;
+    }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; margin: 0; }
+    .page-header p { color: rgba(255,255,255,0.6); margin: 6px 0 0; }
+
+    .contribute-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        padding: 36px;
+        max-width: 680px;
+        margin: 0 auto;
+    }
+    .form-label { font-weight: 600; font-size: 0.88rem; color: #374151; margin-bottom: 6px; }
+    .form-control, .form-select {
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 3px rgba(255,193,7,0.2);
+    }
+    .btn-submit {
+        background: #ffc107;
+        color: #1a1a2e;
+        font-weight: 700;
+        border: none;
+        border-radius: 10px;
+        padding: 13px 32px;
+        font-size: 1rem;
+        transition: all 0.2s;
+        width: 100%;
+    }
+    .btn-submit:hover { background: #ffca2c; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,193,7,0.4); }
+
+    .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .type-option input { display: none; }
+    .type-option label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.88rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        color: #374151;
+    }
+    .type-option label i { font-size: 1rem; color: #9ca3af; }
+    .type-option input:checked + label {
+        border-color: #ffc107;
+        background: #fffbeb;
+        color: #1a1a2e;
+    }
+    .type-option input:checked + label i { color: #ffc107; }
+
+    .info-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-size: 0.85rem;
+        color: #166534;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fa fa-plus-circle me-2" style="color:#ffc107;"></i>Contribute</h1>
+        <p>Help keep NairobiRide accurate for everyone</p>
+    </div>
+</div>
+
+<div class="container mt-5 mb-5">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-4" style="max-width:680px;margin:0 auto 24px;">
+            <i class="fa fa-circle-check fa-lg"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="contribute-card">
+        <h4 class="fw-bold mb-1" style="color:#1a1a2e;">Submit a Route Update</h4>
+        <p class="text-muted mb-4" style="font-size:0.9rem;">All submissions are reviewed before going live.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Type -->
+            <div class="mb-4">
+                <div class="form-label">What are you reporting?</div>
+                <div class="type-grid">
+                    <div class="type-option">
+                        <input type="radio" name="type" id="t1" value="tip" checked>
+                        <label for="t1"><i class="fa fa-lightbulb"></i> General Tip</label>
+                    </div>
+                    <div class="type-option">
+                        <input type="radio" name="type" id="t2" value="fare_change">
+                        <label for="t2"><i class="fa fa-money-bill-wave"></i> Fare Change</label>
+                    </div>
+                    <div class="type-option">
+                        <input type="radio" name="type" id="t3" value="stage_change">
+                        <label for="t3"><i class="fa fa-map-pin"></i> Stage Change</label>
+                    </div>
+                    <div class="type-option">
+                        <input type="radio" name="type" id="t4" value="new_route">
+                        <label for="t4"><i class="fa fa-route"></i> New Route</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Route -->
+            <div class="mb-3">
+                <label class="form-label">Related Route <span class="text-muted fw-normal">(optional)</span></label>
+                <select name="route" class="form-select">
+                    <option value="">— Select a route —</option>
+                    {% for route in routes %}
+                    <option value="{{ route.pk }}">Route {{ route.number }} → {{ route.destination }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Details -->
+            <div class="mb-3">
+                <label class="form-label">Details <span class="text-danger">*</span></label>
+                <textarea name="content" class="form-control" rows="4"
+                    placeholder="e.g. Route 111 no longer stops at Galleria on Sundays..." required></textarea>
+            </div>
+
+            <!-- Name -->
+            <div class="mb-4">
+                <label class="form-label">Your Name <span class="text-muted fw-normal">(optional)</span></label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. John or Anonymous">
+            </div>
+
+            <div class="info-box mb-4">
+                <i class="fa fa-shield-halved mt-1"></i>
+                <span>Your submission will be reviewed by our team before it appears on the site. Thank you for helping Nairobi commuters!</span>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fa fa-paper-plane me-2"></i>Submit Contribution
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

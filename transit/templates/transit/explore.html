@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Explore Map — NairobiRide{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+        padding: 36px 0;
+        color: #fff;
+    }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; margin: 0; }
+    .page-header p { color: rgba(255,255,255,0.6); margin: 6px 0 0; }
+
+    #map {
+        height: 600px;
+        width: 100%;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        background: #e5e7eb;
+    }
+    .route-legend {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        height: 600px;
+        overflow-y: auto;
+    }
+    .legend-header {
+        background: #ffc107;
+        padding: 14px 18px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #1a1a2e;
+        position: sticky;
+        top: 0;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        border-bottom: 1px solid #f3f4f6;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .legend-item:hover { background: #fffbeb; }
+    .legend-num {
+        width: 36px; height: 36px;
+        border-radius: 8px;
+        background: #1a1a2e;
+        color: #ffc107;
+        font-weight: 800;
+        font-size: 0.85rem;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .legend-dest { font-weight: 600; font-size: 0.88rem; color: #1a1a2e; }
+    .legend-fare { font-size: 0.75rem; color: #888; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fa fa-map me-2" style="color:#ffc107;"></i>Explore All Routes</h1>
+        <p>Click any route in the list to zoom to it on the map</p>
+    </div>
+</div>
+
+<div class="container-fluid px-4 mt-4 mb-5">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="route-legend">
+                <div class="legend-header"><i class="fa fa-route me-2"></i>{{ routes.count }} Routes</div>
+                {% for route in routes %}
+                <div class="legend-item" onclick="focusRoute({{ route.pk }})">
+                    <div class="legend-num">{{ route.number }}</div>
+                    <div>
+                        <div class="legend-dest">{{ route.destination }}</div>
+                        <div class="legend-fare"><i class="fa fa-money-bill-wave me-1"></i>{{ route.fare_estimate }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Pass stage data from Django to JS -->
+<script id="stage-data" type="application/json">
+[{% for route in routes %}{"id":{{ route.pk }},"number":"{{ route.number }}","destination":"{{ route.destination }}","fare":"{{ route.fare_estimate }}","stages":[{% for s in route.stages.all %}{"lat":{{ s.latitude }},"lng":{{ s.longitude }},"name":"{{ s.name }}","hub":{{ s.is_major_hub|yesno:"true,false" }}}{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+    var map = L.map('map').setView([-1.2864, 36.8172], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(map);
+
+    var routeLayers = {};
+    var colors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#e91e63','#00bcd4','#8bc34a'];
+    var routeData = JSON.parse(document.getElementById('stage-data').textContent);
+
+    routeData.forEach(function(route, i) {
+        var color = colors[i % colors.length];
+        var coords = [];
+        var markers = [];
+
+        route.stages.forEach(function(stage) {
+            var dot = L.circleMarker([stage.lat, stage.lng], {
+                radius: stage.hub ? 8 : 5,
+                fillColor: stage.hub ? '#ffc107' : color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            }).bindPopup('<b>' + stage.name + '</b><br>Route ' + route.number + ' → ' + route.destination);
+            markers.push(dot);
+            coords.push([stage.lat, stage.lng]);
+        });
+
+        var group = L.featureGroup(markers);
+        if (coords.length > 1) {
+            L.polyline(coords, {color: color, weight: 4, opacity: 0.8}).addTo(group);
+        }
+        markers.forEach(function(m) { m.addTo(group); });
+        group.addTo(map);
+        routeLayers[route.id] = { group: group, bounds: group.getBounds() };
+    });
+
+    function focusRoute(id) {
+        var r = routeLayers[id];
+        if (r) map.fitBounds(r.bounds, {padding: [40, 40]});
+    }
+
+    // Force Leaflet to recalculate size after Bootstrap grid renders
+    setTimeout(function() { map.invalidateSize(true); }, 300);
+</script>
+{% endblock %}

@@ -2,8 +2,7 @@
 {% block title %}Route {{ route.number }} to {{ route.destination }} — NairobiRide{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <style>
     /* Route header banner */
     .route-header {
@@ -243,37 +242,37 @@
     </div>
 </div>
 
+<!-- Stage data for JS -->
+<script id="stage-data" type="application/json">
+[{% for stage in stages %}{"lat":{{ stage.latitude }},"lng":{{ stage.longitude }},"name":"{{ stage.name|escapejs }}","hub":{{ stage.is_major_hub|yesno:"true,false" }},"n":{{ forloop.counter }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
+
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN2GqaE=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
     var map = L.map('map').setView([-1.286389, 36.817223], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
     }).addTo(map);
 
-    var hubIcon = L.divIcon({
-        html: '<div style="background:#ffc107;width:16px;height:16px;border-radius:50%;border:3px solid #1a1a2e;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-        className: '', iconAnchor: [8, 8]
-    });
-    var stopIcon = L.divIcon({
-        html: '<div style="background:#0f3460;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>',
-        className: '', iconAnchor: [6, 6]
-    });
-
+    var stages = JSON.parse(document.getElementById('stage-data').textContent);
     var coords = [];
-    {% for stage in stages %}
-    L.marker([{{ stage.latitude }}, {{ stage.longitude }}],
-        {icon: {% if stage.is_major_hub %}hubIcon{% else %}stopIcon{% endif %}}
-    ).addTo(map).bindPopup(
-        '<b>{{ stage.name }}</b><br>Stop #{{ forloop.counter }}'
-        {% if stage.is_major_hub %} + '<br><span style="color:#f59e0b;font-size:0.8rem;">⭐ Major Boarding Point</span>'{% endif %}
-    );
-    coords.push([{{ stage.latitude }}, {{ stage.longitude }}]);
-    {% endfor %}
+
+    stages.forEach(function(s) {
+        L.circleMarker([s.lat, s.lng], {
+            radius:      s.hub ? 8 : 5,
+            fillColor:   s.hub ? '#ffc107' : '#0f3460',
+            color:       '#fff',
+            weight:      2,
+            fillOpacity: 1
+        }).addTo(map).bindPopup('<b>' + s.name + '</b><br>Stop #' + s.n +
+            (s.hub ? '<br><span style="color:#f59e0b;">Major Boarding Point</span>' : ''));
+        coords.push([s.lat, s.lng]);
+    });
 
     if (coords.length > 1) {
         var line = L.polyline(coords, {color: '#ffc107', weight: 4, opacity: 0.8, dashArray: '8,4'}).addTo(map);
@@ -281,5 +280,7 @@
     } else if (coords.length === 1) {
         map.setView(coords[0], 14);
     }
+
+    setTimeout(function() { map.invalidateSize(true); }, 300);
 </script>
 {% endblock %}

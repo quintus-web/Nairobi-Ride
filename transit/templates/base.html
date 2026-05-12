@@ -51,9 +51,9 @@
     <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="/">🚌 Nairobi<span>Ride</span></a>
         <div class="nav-links d-none d-md-flex">
-            <a href="/"><i class="fa fa-search me-1"></i>Search Routes</a>
-            <a href="#"><i class="fa fa-map me-1"></i>Explore Map</a>
-            <a href="#"><i class="fa fa-plus-circle me-1"></i>Contribute</a>
+            <a href="{% url 'home' %}"><i class="fa fa-search me-1"></i>Search Routes</a>
+            <a href="{% url 'explore' %}"><i class="fa fa-map me-1"></i>Explore Map</a>
+            <a href="{% url 'contribute' %}"><i class="fa fa-plus-circle me-1"></i>Contribute</a>
         </div>
     </div>
 </nav>
