@@ -48,10 +48,21 @@
 
     /* Map */
     #map {
-        height: 480px;
+        height: 600px;
         width: 100%;
-        border-radius: 14px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        border-radius: 15px;
+        border: 4px solid #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    @media (max-width: 768px) {
+        #map { height: 80vh; border-radius: 0; border: none; }
+    }
+    #proximity-toast {
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        background: #1a1a2e; color: #ffc107; padding: 12px 24px;
+        border-radius: 30px; font-weight: 700; font-size: 0.95rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 9999;
+        display: none; white-space: nowrap;
     }
 
     /* Timeline stages */
@@ -295,43 +306,97 @@
 
 <!-- Stage data for JS -->
 <script id="stage-data" type="application/json">
-[{% for stage in stages %}{"lat":{{ stage.latitude }},"lng":{{ stage.longitude }},"name":"{{ stage.name|escapejs }}","hub":{{ stage.is_major_hub|yesno:"true,false" }},"n":{{ forloop.counter }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+[{% for stage in stages %}{"lat":{{ stage.latitude }},"lng":{{ stage.longitude }},"name":"{{ stage.nickname|default:stage.name|escapejs }}","hub":{{ stage.is_major_hub|yesno:"true,false" }},"n":{{ forloop.counter }}}{% if not forloop.last %},{% endif %}{% endfor %}]
 </script>
+
+<!-- Proximity toast -->
+<div id="proximity-toast"><i class="fa fa-bell me-2"></i><span id="toast-msg"></span></div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-    var map = L.map('map').setView([-1.286389, 36.817223], 13);
+    // ── Tile layers ──────────────────────────────────────────────────────
+    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, USDA, USGS, AEX, GeoEye',
+        maxZoom: 19
+    });
+    var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 18
-    }).addTo(map);
+    var map = L.map('map', { center: [-1.286389, 36.817223], zoom: 13, layers: [satellite] });
+    L.control.layers({ 'Satellite': satellite, 'Streets': streets }).addTo(map);
 
+    // ── Plot route stages ────────────────────────────────────────────────
     var stages = JSON.parse(document.getElementById('stage-data').textContent);
     var coords = [];
 
     stages.forEach(function(s) {
         L.circleMarker([s.lat, s.lng], {
-            radius:      s.hub ? 8 : 5,
-            fillColor:   s.hub ? '#ffc107' : '#0f3460',
-            color:       '#fff',
+            radius:      s.hub ? 9 : 5,
+            fillColor:   s.hub ? '#ffc107' : '#fff',
+            color:       s.hub ? '#1a1a2e' : '#0f3460',
             weight:      2,
             fillOpacity: 1
         }).addTo(map).bindPopup('<b>' + s.name + '</b><br>Stop #' + s.n +
-            (s.hub ? '<br><span style="color:#f59e0b;">Major Boarding Point</span>' : ''));
+            (s.hub ? '<br><span style="color:#f59e0b;">&#9733; Major Stop</span>' : ''));
         coords.push([s.lat, s.lng]);
     });
 
     if (coords.length > 1) {
-        var line = L.polyline(coords, {color: '#ffc107', weight: 4, opacity: 0.8, dashArray: '8,4'}).addTo(map);
-        map.fitBounds(line.getBounds(), {padding: [30, 30]});
+        var line = L.polyline(coords, { color: '#ffc107', weight: 4, opacity: 0.9 }).addTo(map);
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
     } else if (coords.length === 1) {
-        map.setView(coords[0], 14);
+        map.setView(coords[0], 15);
     }
 
     setTimeout(function() { map.invalidateSize(true); }, 300);
+
+    // ── Live location tracking ───────────────────────────────────────────
+    var toast = document.getElementById('proximity-toast');
+    var toastMsg = document.getElementById('toast-msg');
+    var toastTimer;
+
+    function showToast(msg) {
+        toastMsg.textContent = msg;
+        toast.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function() { toast.style.display = 'none'; }, 5000);
+    }
+
+    function haversineMeters(lat1, lng1, lat2, lng2) {
+        var R = 6371000, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+        var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+                Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    var alerted = {};
+
+    map.locate({ watch: true, maxZoom: 16 });
+
+    map.on('locationfound', function(e) {
+        if (window.userMarker) { map.removeLayer(window.userMarker); map.removeLayer(window.userCircle); }
+        window.userMarker = L.circleMarker(e.latlng, {
+            radius: 8, fillColor: '#3b82f6', color: '#fff', weight: 2, fillOpacity: 1
+        }).addTo(map).bindPopup('You are here');
+        window.userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#3b82f6', fillOpacity: 0.1 }).addTo(map);
+
+        // Proximity alert — 150 m from any stage
+        stages.forEach(function(s) {
+            var dist = haversineMeters(e.latlng.lat, e.latlng.lng, s.lat, s.lng);
+            if (dist < 150 && !alerted[s.n]) {
+                alerted[s.n] = true;
+                showToast('Approaching ' + s.name + ' Stage!');
+            }
+        });
+    });
+
+    map.on('locationerror', function() {
+        console.warn('Location access denied or unavailable.');
+    });
 </script>
 {% endblock %}
