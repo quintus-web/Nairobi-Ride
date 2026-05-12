@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: nairobi-ride
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: nairobi-ride.onrender.com
+      - key: PYTHON_VERSION
+        value: 3.12.7
