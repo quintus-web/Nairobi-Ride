@@ -306,7 +306,7 @@
 
 <!-- Stage data for JS -->
 <script id="stage-data" type="application/json">
-[{% for stage in stages %}{"lat":{{ stage.latitude }},"lng":{{ stage.longitude }},"name":"{{ stage.nickname|default:stage.name|escapejs }}","hub":{{ stage.is_major_hub|yesno:"true,false" }},"n":{{ forloop.counter }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+[{% for stage in stages %}{"lat":{{ stage.latitude }},"lng":{{ stage.longitude }},"name":"{{ stage.nickname|default:stage.name|escapejs }}","hub":{{ stage.is_major_hub|yesno:"true,false" }},"n":{{ forloop.counter }},"first":{{ forloop.first|yesno:"true,false" }},"last":{{ forloop.last|yesno:"true,false" }}}{% if not forloop.last %},{% endif %}{% endfor %}]
 </script>
 
 <!-- Proximity toast -->
@@ -334,21 +334,51 @@
     var stages = JSON.parse(document.getElementById('stage-data').textContent);
     var coords = [];
 
+    // Custom label icon factory
+    function labelIcon(text, bg, textColor) {
+        return L.divIcon({
+            className: '',
+            html: '<div style="background:' + bg + ';color:' + textColor + ';padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid #fff;">' + text + '</div>',
+            iconAnchor: [0, 0]
+        });
+    }
+
     stages.forEach(function(s) {
+        var color, radius, label;
+
+        if (s.first) {
+            // Departure — green
+            color = '#16a34a'; radius = 11;
+            L.marker([s.lat, s.lng], { icon: labelIcon('🟢 Departure: ' + s.name, '#16a34a', '#fff') }).addTo(map);
+        } else if (s.last) {
+            // Destination — red
+            color = '#dc2626'; radius = 11;
+            L.marker([s.lat, s.lng], { icon: labelIcon('🏁 Destination: ' + s.name, '#dc2626', '#fff') }).addTo(map);
+        } else if (s.hub) {
+            // Major hub — yellow, show stage name label
+            color = '#ffc107'; radius = 8;
+            L.marker([s.lat, s.lng], { icon: labelIcon(s.name, '#1a1a2e', '#ffc107') }).addTo(map);
+        } else {
+            color = '#fff'; radius = 5;
+        }
+
         L.circleMarker([s.lat, s.lng], {
-            radius:      s.hub ? 9 : 5,
-            fillColor:   s.hub ? '#ffc107' : '#fff',
-            color:       s.hub ? '#1a1a2e' : '#0f3460',
+            radius:      radius || 5,
+            fillColor:   color || '#fff',
+            color:       s.first ? '#16a34a' : (s.last ? '#dc2626' : (s.hub ? '#1a1a2e' : '#0f3460')),
             weight:      2,
             fillOpacity: 1
-        }).addTo(map).bindPopup('<b>' + s.name + '</b><br>Stop #' + s.n +
-            (s.hub ? '<br><span style="color:#f59e0b;">&#9733; Major Stop</span>' : ''));
+        }).addTo(map).bindPopup(
+            '<b>' + (s.first ? '🟢 Departure' : s.last ? '🏁 Destination' : 'Stop #' + s.n) + '</b>' +
+            '<br>' + s.name +
+            (s.hub ? '<br><span style="color:#f59e0b;">&#9733; Major Stop</span>' : '')
+        );
         coords.push([s.lat, s.lng]);
     });
 
     if (coords.length > 1) {
         var line = L.polyline(coords, { color: '#ffc107', weight: 4, opacity: 0.9 }).addTo(map);
-        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+        map.fitBounds(line.getBounds(), { padding: [40, 40] });
     } else if (coords.length === 1) {
         map.setView(coords[0], 15);
     }
@@ -381,9 +411,14 @@
     map.on('locationfound', function(e) {
         if (window.userMarker) { map.removeLayer(window.userMarker); map.removeLayer(window.userCircle); }
         window.userMarker = L.circleMarker(e.latlng, {
-            radius: 8, fillColor: '#3b82f6', color: '#fff', weight: 2, fillOpacity: 1
-        }).addTo(map).bindPopup('You are here');
+            radius: 10, fillColor: '#3b82f6', color: '#fff', weight: 3, fillOpacity: 1
+        }).addTo(map).bindPopup('<b>📍 Your Location</b><br>Accuracy: ' + Math.round(e.accuracy) + 'm');
         window.userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#3b82f6', fillOpacity: 0.1 }).addTo(map);
+        // Label
+        if (window.userLabel) map.removeLayer(window.userLabel);
+        window.userLabel = L.marker(e.latlng, {
+            icon: L.divIcon({ className: '', html: '<div style="background:#3b82f6;color:#fff;padding:3px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid #fff;margin-top:14px;">📍 You</div>', iconAnchor: [0,0] })
+        }).addTo(map);
 
         // Proximity alert — 150 m from any stage
         stages.forEach(function(s) {
